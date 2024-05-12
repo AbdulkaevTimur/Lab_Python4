@@ -1,0 +1,239 @@
+#Вариант 1. Формируется матрица F следующим образом:
+#скопировать в нее А и если количество нулей в В больше,
+#чем в Е, то поменять в ней местами В и С симметрично,
+#иначе В и Е поменять местами несимметрично. При этом матрица А не меняется.
+#После чего если определитель матрицы А больше суммы диагональных элементов матрицы F,
+#то вычисляется выражение: A*AT – K * F, иначе вычисляется выражение (A-1 +G-F-1)*K,
+#где G-нижняя треугольная матрица, полученная из А.
+#Выводятся по мере формирования А, F и все матричные операции последовательно.
+
+#Вид матрицы A:         D E
+#                       C B
+
+import random
+import numpy
+import matplotlib.pyplot as plt
+
+def print_matr(m):
+    for i in range(len(m)):
+        for j in range(len(m)):
+            print('{:4d}'.format(m[i][j]), end='')
+        print()
+
+N = int(input('Введите четное натуральное число N > 5: '))
+while (N % 2 != 0) or (N < 6):
+       print('Число N должно быть четным и больше 5!')
+       N = int(input('Введите число N: '))
+K = int(input('Введите целое число K: '))
+mid = int(N/2)
+count_null_B = 0
+count_null_E = 0
+sum_F = 0
+
+A = [[random.randint(-10, 10) for i in range(N)] for j in range(N)]
+#Заполнение матрицы A вручную:
+#for i in range(N):
+#    for j in range(N):
+#        A[i][j] = int(input('Элемент ' + str(i + 1) + ' строки, ' + str(j + 1) + ' столбца: '))
+
+print('Матрица A: ')
+print_matr(A)
+D = [[A[i][j] for j in range(mid)] for i in range(mid)]
+E = [[A[i][j] for j in range(mid, N)] for i in range(0, mid)]
+C = [[A[i][j] for j in range(mid)] for i in range(mid, N)]
+B = [[A[i][j] for j in range(mid, N)] for i in range(mid, N)]
+#Заполнение подматрицы B вручную:
+#for i in range(mid):
+#    for j in range(mid):
+#        B[i][j] = int(input('Элемент подматрицы \'B\' ' + str(i + 1) + ' строки, ' + str(j + 1) + ' столбца: '))
+
+print('Подматрица B, Подматрица E: ')
+for i in range(len(B)):
+    for j in range(len(B)):
+        print('{:4d}'.format(B[i][j]), end = '')
+    print('       ', end = '')
+    for l in range(len(E)):
+        print('{:4d}'.format(E[i][l]), end = '')
+    print()
+
+for i in range(len(B)):
+    for j in range(len(B)):
+        if B[i][j] == 0:
+            count_null_B += 1
+for i in range(len(E)):
+    for j in range(len(E)):
+        if E[i][j] == 0:
+            count_null_E += 1
+
+if count_null_B > count_null_E:
+    print('Количество нулей в подматрице \'B\' больше, чем в подматрице \'E\'')
+    for i in range(mid // 2 - 1, mid):
+        for j in range(mid):
+            C[i][j], B[(mid - i) - 1][(mid - j) - 1] = B[(mid - i) - 1][(mid - j) - 1], C[i][j]
+    print('Симметрично измененные Подматрица B, Подматрица C: ')
+    for i in range(len(B)):
+        for j in range(len(B)):
+            print('{:4d}'.format(B[i][j]), end='')
+        print('       ', end='')
+        for l in range(len(C)):
+            print('{:4d}'.format(C[i][l]), end='')
+        print()
+else:
+    print('Количество нулей в подматрице \'B\' не больше, чем в подматрице \'C\'')
+    B, E = E, B
+
+F = [[1 for j in range(N)] for i in range(N)]
+#D
+for i in range(mid):
+    for j in range(mid):
+        F[i][j] = D[i][j]
+#E
+for i in range(mid):
+    for j in range(mid, N):
+        F[i][j] = E[i][j - (mid)]
+#C
+for i in range(mid, N):
+    for j in range(mid):
+        F[i][j] = C[i - mid][j]
+#B
+for i in range(mid, N):
+    for j in range(mid, N):
+        F[i][j] = B[i - mid][j - mid]
+
+print("Матрица F: ")
+print_matr(F)
+
+#Вычисление определителя матрицы А
+a_arr = numpy.array(A)
+det_A = numpy.linalg.det(a_arr)
+det_A = int(det_A)
+print('Определитель матрицы А: ' + str(det_A))
+
+for i in range(N):
+    sum_F += F[i][i]
+    sum_F += F[i][(N - i) - 1]
+print('Сумма элементов диагоналей матрицы F: ' + str(sum_F))
+if det_A > sum_F:
+    AT = a_arr.T
+    A_AT = [[1 for j in range(N)] for i in range(N)]
+    KF = [[1 for j in range(N)] for i in range(N)]
+    A_AT_KF = [[1 for j in range(N)] for i in range(N)]
+
+    print('Транспонированная матрица A: ')
+    print_matr(AT)
+
+    for i in range(N):
+        for j in range(N):
+            A_AT[i][j] = A[i][j] * AT[i][j]
+    print('Матрица A * AT: ')
+    print_matr(A_AT)
+
+    for i in range(N):
+        for j in range(N):
+            KF[i][j] = K * F[i][j]
+    print('Матрица K * F: ')
+    print_matr(KF)
+
+    for i in range(N):
+        for j in range(N):
+            A_AT_KF [i][j] = A_AT[i][j] - KF[i][j]
+    print('Результат: Матрица A * AT - K * F: ')
+    print_matr(A_AT_KF)
+else:
+    if det_A != 0:
+        print('Обратная матрица А: ')
+        A_inverse = numpy.linalg.inv(a_arr)
+        for i in range(N):
+            for j in range(N):
+                print(round(A_inverse[i][j], 3), '  ', end='')
+            print()
+    else:
+        print('Обратной матрицы A не существует')
+        exit()
+
+    f_arr = numpy.array(F)
+    det_F = numpy.linalg.det(f_arr)
+    print('Определитель матрицы F: ' + str(det_F))
+    if det_F != 0:
+        F_inverse = numpy.linalg.inv(f_arr)
+        print('Обратная матрица F: ')
+        for i in range(N):
+            for j in range(N):
+                print(round(F_inverse[i][j], 3), '    ', end='')
+            print()
+    else:
+        print('Обратной матрицы F не существует')
+        exit()
+
+    G = numpy.tril(a_arr, 0)
+    print('Нижняя треугольная матрица: ')
+    print_matr(G)
+
+    A_G = [[1 for j in range(N)] for i in range(N)]
+    A_G_F = [[1 for j in range(N)] for i in range(N)]
+    A_G_F_K = [[1 for j in range(N)] for i in range(N)]
+
+    print('Матрица A^-1 + G: ')
+    for i in range(N):
+        for j in range(N):
+            A_G[i][j] = A_inverse[i][j] + G[i][j]
+            print(round(A_G[i][j], 3), '    ',  end = '')
+        print()
+
+    print('Матрица A^-1 + G - F^-1: ')
+    for i in range(N):
+        for j in range(N):
+            A_G_F[i][j] = A_G[i][j] - F_inverse[i][j]
+            print(round(A_G_F[i][j], 3), '    ',  end = '')
+        print()
+
+    print('Результат: Матрица (A^-1 + G - F^-1) * K: ')
+    for i in range(N):
+        for j in range(N):
+            A_G_F_K[i][j] = A_G_F[i][j] * K
+            print(round(A_G_F_K[i][j], 3), '    ', end = '')
+        print()
+
+#Графики по матрице F: График №1. Значения элементов матрицы в строках F (размерность 6x6)
+x_list = list(range(0, 6))
+y1_list = F[0]
+y2_list = F[1]
+y3_list = F[2]
+y4_list = F[3]
+y5_list = F[4]
+y6_list = F[5]
+
+plt.plot(x_list, y1_list, label='Строка 1', marker='o')
+plt.plot(x_list, y2_list, label='Строка 2', marker='o')
+plt.plot(x_list, y3_list, label='Строка 3', marker='o')
+plt.plot(x_list, y4_list, label='Строка 4', marker='o')
+plt.plot(x_list, y5_list, label='Строка 5', marker='o')
+plt.plot(x_list, y6_list, label='Строка 6', marker='o')
+plt.title('График значений матрицы F (размерность 6х6)')
+plt.xlabel('Столбец')
+plt.ylabel('Значение')
+plt.legend()
+plt.show()
+#График №2. Значения элементов главной и побочной диагонали матрицы F (размерность 6х6)
+width = 0.4
+x_ind = numpy.arange(len(x_list))
+y1_list = [F[i][i] for i in range(0, 6)]
+y2_list = [F[5 - i][i] for i in range(0, 6)]
+
+plt.title('График значений элементов диагоналей матрицы F (размерность 6х6)')
+plt.bar(x_ind - width / 2, y1_list, label='Главная диагональ', width = width)
+plt.bar(x_ind + width / 2, y2_list,  label='Побочная диагональ', width = width)
+plt.legend()
+plt.show()
+
+#График №3. Количество элементов больше 0 в каждой строке матрицы F (размерность 6х6)
+y1_list = []
+for j in range(0, 6):
+    k = 0
+    for i in range(0, 6):
+        if F[i][j] > 0:
+            k += 1
+    y1_list.append(k)
+plt.title('График количества элементов больше 0 в каждой строке матрицы F (размерность 6х6)')
+plt.bar(x_list, y1_list, width = width)
+plt.show()
